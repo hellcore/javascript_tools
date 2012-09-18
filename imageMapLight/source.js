@@ -7,12 +7,6 @@ var imageMapLight = (function(){
 		border: 0
 	};
 
-	var is_img_loaded = function(img) {
-		if(!img.complete) { return false; }
-		if(typeof img.naturalWidth !== "undefined" && img.naturalWidth === 0) { return false; }
-		return true;
-	};
-
 	var canvasSupport = (function(){
 		var drawShape = function(context, shape, coords) {
 			context.beginPath();
@@ -77,7 +71,16 @@ var imageMapLight = (function(){
 		if (!this.image.is('img') || this.map.length == 0) {
 			throw "can't load map light";
 		}
+
 		this.provider = canvasSupport; // new canvasSupport(this.image.get(0));
+
+		var $parent = this.image.parent();
+		if ($parent.hasClass('maplight') && $parent.children('canvas').length > 0) {
+			this.imageHover = $parent.children('canvas').get(0);
+			this.unbindMouseEvents(); // confirm that elements dont have events bind
+			this.bindMouseEvents();
+			return; // exit
+		}
 
 		var wrap = $(document.createElement('div')).css({
 				display:'block',
@@ -89,7 +92,7 @@ var imageMapLight = (function(){
 				});
 		this.image.before(wrap).css('opacity', 0).css(possition).remove();
 		if($.browser.msie) { img.css('filter', 'Alpha(opacity=0)'); }
-		wrap.append(this.image);
+		wrap.append(this.image).addClass('maplight');
 
 		this.imageHover = this.provider.create(this.image.get(0));
 		$(this.imageHover).css(possition);
@@ -100,6 +103,14 @@ var imageMapLight = (function(){
 		var onAreas = this.map.find('area[data-mapLight-on="true"]');
 		this.lightAreas(onAreas);
 
+		this.bindMouseEvents();
+	};
+
+	mapLight.prototype.unbindMouseEvents = function () {
+		this.map.find('area').each(function(){ $(this).unbind('.mapLight'); });
+	};
+
+	mapLight.prototype.bindMouseEvents = function() {
 		this.map.find('area').each((function(idx, element) {
 			$(element)
 				.bind('mouseenter.mapLight', (function(e){
@@ -126,7 +137,6 @@ var imageMapLight = (function(){
 	mapLight.prototype.lightArea = function(area) {
 		var drawInfo 	= mapLight.readDrawInfo(area);
 		var options 	= mapLight.readOptions(area);
-
 		this.provider.addShape(this.imageHover, drawInfo.shape, drawInfo.coords, options);
 	};
 
