@@ -115,8 +115,8 @@ var imageMapLight = (function(){
 			$(element)
 				.bind('mouseenter.mapLight', (function(e){
 					this.instance.clearAreas();
+					if (!$(this.area).hasClass('selected')) { this.instance.lightArea(this.area); }
 					var onAreas = this.instance.map.find('area[data-mapLight-on="true"]');
-					this.instance.lightArea(this.area);
 					this.instance.lightAreas(onAreas);
 				}).bind({instance: this.instance, area: element}))
 				.bind('mouseleave.mapLight', (function(e){
@@ -135,12 +135,15 @@ var imageMapLight = (function(){
 	};
 
 	mapLight.prototype.lightArea = function(area) {
+		var $area = $(area);
 		var drawInfo 	= mapLight.readDrawInfo(area);
 		var options 	= mapLight.readOptions(area);
 		this.provider.addShape(this.imageHover, drawInfo.shape, drawInfo.coords, options);
+		$area.addClass('selected');
 	};
 
 	mapLight.prototype.clearAreas = function() {
+		this.map.find('area.selected:not([data-mapLight-on="true"])').removeClass('selected');
 		this.provider.clear(this.imageHover);
 	};
 
